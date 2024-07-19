@@ -7,19 +7,21 @@ import copy
 import aioxmpp
 import aioxmpp.forms.xso as forms_xso
 import pytest
+import slixmpp
 
 from spade.message import Message, SPADE_X_METADATA
 
 
 def test_prepare(message):
     aiomsg = message.prepare()
-    assert aiomsg.to == aioxmpp.JID.fromstr("to@localhost")
-    assert aiomsg.from_ == aioxmpp.JID.fromstr("sender@localhost")
-    assert aiomsg.body[None] == "message body"
+    assert aiomsg['to'] == slixmpp.JID("to@localhost")
+    assert aiomsg['from'] == slixmpp.JID("sender@localhost")
+    assert aiomsg['body'] == "message body"
 
-    for data in aiomsg.xep0004_data:
-        if data.title == SPADE_X_METADATA:
-            for field in data.fields:
+    a = [pl for pl in aiomsg.get_payload() if pl.tag == '{jabber:x:data}x']
+    for form in [pl for pl in aiomsg.get_payload() if pl.tag == '{jabber:x:data}x']:
+        if form.tag and form.tag == SPADE_X_METADATA:
+            for field in form.fields:
                 if field.var == "_thread_node":
                     assert field.values[0] == "thread-id"
                 else:

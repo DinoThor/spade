@@ -3,6 +3,9 @@ from typing import Optional, Dict, Type
 
 import aioxmpp
 import aioxmpp.forms.xso as forms_xso
+import slixmpp.stanza
+from slixmpp.plugins.xep_0004 import Form
+
 
 SPADE_X_METADATA = "spade:x:metadata"
 
@@ -245,47 +248,60 @@ class Message(MessageBase):
             metadata=self.metadata,
         )
 
-    def prepare(self) -> aioxmpp.Message:
+    def prepare(self) -> slixmpp.stanza.Message:
         """
-        Returns an aioxmpp.stanza.Message built from the Message and prepared to be sent.
+        Returns a slixmpp.stanza.Message built from the Message and prepared to be sent.
 
         Returns:
-          aioxmpp.stanza.Message: the message prepared to be sent
+          slixmpp.stanza.Message: the message prepared to be sent
 
         """
 
-        msg = aioxmpp.stanza.Message(
-            to=self.to,
-            from_=self.sender,
-            type_=aioxmpp.MessageType.CHAT,
-        )
-
-        msg.body[None] = self.body
+        msg = slixmpp.stanza.Message()
+        msg['to'] = self.to
+        msg['from'] = self.sender
+        msg['body'] = self.body
+        msg.chat()
 
         # Send metadata using xep-0004: Data Forms (https://xmpp.org/extensions/xep-0004.html)
         if len(self.metadata):
-            data = forms_xso.Data(type_=forms_xso.DataType.FORM)
+            form = Form()
+            form['type'] = 'form'
+            #data = forms_xso.Data(type_=forms_xso.DataType.FORM)
 
             for name, value in self.metadata.items():
-                data.fields.append(
-                    forms_xso.Field(
-                        var=name,
-                        type_=forms_xso.FieldType.TEXT_SINGLE,
-                        values=[value],
-                    )
+                form.add_field(
+                    var=name,
+                    ftype='text-single',
+                    value=value
                 )
+
+                #data.fields.append(
+                #    forms_xso.Field(
+                #        var=name,
+                #       type_=forms_xso.FieldType.TEXT_SINGLE,
+                #       values=[value],
+                #   )
+                #)
 
             if self.thread:
-                data.fields.append(
-                    forms_xso.Field(
-                        var="_thread_node",
-                        type_=forms_xso.FieldType.TEXT_SINGLE,
-                        values=[self.thread],
-                    )
+                form.add_field(
+                    var='_thread_node',
+                    ftype='text-single',
+                    value=self.thread
                 )
+                #data.fields.append(
+                #    forms_xso.Field(
+                #        var="_thread_node",
+                #        type_=forms_xso .FieldType.TEXT_SINGLE,
+                #        values=[self.thread],
+                #    )
+                #)
 
-            data.title = SPADE_X_METADATA
-            msg.xep0004_data = [data]
+            form['title'] = SPADE_X_METADATA
+            #data.title = SPADE_X_METADATA
+            #msg.xep0004_data = [data]
+            msg.append(form)
 
         return msg
 

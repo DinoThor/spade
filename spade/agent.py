@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os.path
 import sys
 from asyncio import Task
 from hashlib import md5
@@ -8,6 +9,7 @@ from typing import Coroutine, Optional, Type, Any, List, TypeVar
 import aiosasl
 import aioxmpp
 import aioxmpp.ibr as ibr
+import slixmpp
 from aioxmpp.dispatcher import SimpleMessageDispatcher
 
 from .behaviour import BehaviourType, FSMBehaviour, CyclicBehaviour
@@ -17,6 +19,7 @@ from .presence import PresenceManager
 from .template import Template
 from .trace import TraceStore
 from .web import WebApp
+from .xmpp_client import XMPPClient
 
 logger = logging.getLogger("spade.Agent")
 
@@ -39,7 +42,12 @@ class Agent(object):
           password (str): The password to connect to the server
           verify_security (bool): Wether to verify or not the SSL certificates
         """
-        self.jid = aioxmpp.JID.fromstr(jid)
+        #self.jid = aioxmpp.JID.fromstr(jid)
+
+        logging.basicConfig(level=logging.DEBUG,
+                            format='%(levelname)-8s %(message)s')
+
+        self.jid = slixmpp.JID(jid)
         self.password = password
         self.verify_security = verify_security
 
@@ -106,29 +114,26 @@ class Agent(object):
         await self._hook_plugin_before_connection()
 
         if auto_register:
-            await self._async_register()
-        self.client = aioxmpp.PresenceManagedClient(
-            self.jid,
-            aioxmpp.make_security_layer(
-                self.password, no_verify=not self.verify_security
-            ),
-            logger=logging.getLogger(self.jid.localpart),
-        )
+            pass
+
 
         # obtain an instance of the service
-        self.message_dispatcher = self.client.summon(SimpleMessageDispatcher)
+        #self.message_dispatcher = self.client.summon(SimpleMessageDispatcher)
 
         # Presence service
-        self.presence = PresenceManager(self)
+        # self.presence = PresenceManager(self)
 
         await self._async_connect()
 
+        print("AAAAAAAAAAAAAAAaa")
+
+
         # register a message callback here
-        self.message_dispatcher.register_callback(
-            aioxmpp.MessageType.CHAT,
-            None,
-            self._message_received,
-        )
+        #self.message_dispatcher.register_callback(
+        #    aioxmpp.MessageType.CHAT,
+        #    None,
+        #    self._message_received,
+        #)
 
         await self._hook_plugin_after_connection()
 
@@ -156,8 +161,59 @@ class Agent(object):
 
     async def _async_connect(self) -> None:  # pragma: no cover
         """connect and authenticate to the XMPP server. Async mode."""
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.client = slixmpp.ClientXMPP(self.jid, self.password)
+        self.client.ca_certs = os.path.join(current_dir, "cert", "ca_cert.pem")
+
+        self.client.connected_event = asyncio.Event()
+        self.client.disconnected_event = asyncio.Event()
+
+        connected_task = asyncio.create_task(self.client.connected_event.wait(), name='connected')
+        disconnected_task = asyncio.create_task(self.client.disconnected_event.wait(), name='disconnected')
+
+        connected_cb = lambda _ : self.client.connected_event.set()
+        disconnected_cb = lambda _ : self.client.disconnected_event.set()
+
+        self.client.add_event_handler('session_start', connected_cb)
+        self.client.add_event_handler('failed_all_auth', disconnected_cb)
+
+        self.client.connect()
+
+        done, pending = await asyncio.wait(
+            [connected_task, disconnected_task],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+
+        for task in pending:
+            task.cancel()
+
+        for task in done:
+            try:
+                await task
+                if task.get_name() == 'disconnected':
+                    raise AuthenticationFailure(
+                        "Could not authenticate the agent. Check user and password or use auto_register=True"
+                    )
+            except:
+                raise Exception()
+
+            logger.info(f"Agent {str(self.jid)} connected and authenticated.")
+
+    def disconnect_callback(self, _):
+        return
+        raise AuthenticationFailure(
+            "Could not authenticate the agent. Check user and password or use auto_register=True"
+        )
+
+
+
+
+    async def _async_connect_old(self) -> None:  # pragma: no cover
+        """connect and authenticate to the XMPP server. Async mode."""
         try:
-            self.conn_coro = self.client.connected()
+            #self.conn_coro = self.client.connected()
+            self.conn_coro = self.client._connect_routine()
             aenter = type(self.conn_coro).__aenter__(self.conn_coro)
             self.stream = await aenter
             logger.info(f"Agent {str(self.jid)} connected and authenticated.")
@@ -188,7 +244,7 @@ class Agent(object):
         Returns:
             str: the name of the agent (the string before the '@')
         """
-        return self.jid.localpart
+        return self.jid.node
 
     @property
     def avatar(self) -> str:
@@ -200,7 +256,7 @@ class Agent(object):
           str: the url of the agent's avatar
 
         """
-        return self.build_avatar_url(self.jid.bare())
+        return self.build_avatar_url(self.jid.bare)
 
     @staticmethod
     def build_avatar_url(jid: str) -> str:
@@ -214,7 +270,7 @@ class Agent(object):
           str: an URL for the gravatar
 
         """
-        digest = md5(str(jid).encode("utf-8")).hexdigest()
+        digest = md5(jid.encode("utf-8")).hexdigest()
         return "http://www.gravatar.com/avatar/{md5}?d=monsterid".format(md5=digest)
 
     def submit(self, coro: Coroutine) -> Task:
