@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os.path
+import ssl
 import sys
 from asyncio import Task
 from hashlib import md5
@@ -32,6 +33,12 @@ class AuthenticationFailure(Exception):
     pass
 
 
+class DisconnectedException(Exception):
+    """ """
+
+    pass
+
+
 class Agent(object):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         """
@@ -40,10 +47,8 @@ class Agent(object):
         Args:
           jid (str): The identifier of the agent in the form username@server
           password (str): The password to connect to the server
-          verify_security (bool): Wether to verify or not the SSL certificates
+          verify_security (bool): Weather to verify or not the SSL certificates
         """
-        #self.jid = aioxmpp.JID.fromstr(jid)
-
         logging.basicConfig(level=logging.DEBUG,
                             format='%(levelname)-8s %(message)s')
 
@@ -116,7 +121,6 @@ class Agent(object):
         if auto_register:
             pass
 
-
         # obtain an instance of the service
         #self.message_dispatcher = self.client.summon(SimpleMessageDispatcher)
 
@@ -124,9 +128,6 @@ class Agent(object):
         # self.presence = PresenceManager(self)
 
         await self._async_connect()
-
-        print("AAAAAAAAAAAAAAAaa")
-
 
         # register a message callback here
         #self.message_dispatcher.register_callback(
@@ -164,24 +165,27 @@ class Agent(object):
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.client = slixmpp.ClientXMPP(self.jid, self.password)
-        self.client.ca_certs = os.path.join(current_dir, "cert", "ca_cert.pem")
+
+        if not self.verify_security:
+            self.ssl_context.check_hostname = False
+            self.ssl_context.verify_mode = ssl.CERT_NONE
 
         self.client.connected_event = asyncio.Event()
         self.client.disconnected_event = asyncio.Event()
+        self.client.failed_auth_event = asyncio.Event()
 
         connected_task = asyncio.create_task(self.client.connected_event.wait(), name='connected')
         disconnected_task = asyncio.create_task(self.client.disconnected_event.wait(), name='disconnected')
+        failed_auth_task = asyncio.create_task(self.client.failed_auth_event.wait(), name='failed_auth')
 
-        connected_cb = lambda _ : self.client.connected_event.set()
-        disconnected_cb = lambda _ : self.client.disconnected_event.set()
-
-        self.client.add_event_handler('session_start', connected_cb)
-        self.client.add_event_handler('failed_all_auth', disconnected_cb)
+        self.client.add_event_handler('session_start', lambda _: self.client.connected_event.set())
+        self.client.add_event_handler('disconnected', lambda _: self.client.disconnected_event.set())
+        self.client.add_event_handler('failed_all_auth', lambda _: self.client.failed_auth_event.set())
 
         self.client.connect()
 
         done, pending = await asyncio.wait(
-            [connected_task, disconnected_task],
+            [connected_task, disconnected_task, failed_auth_task],
             return_when=asyncio.FIRST_COMPLETED
         )
 
@@ -189,38 +193,18 @@ class Agent(object):
             task.cancel()
 
         for task in done:
-            try:
-                await task
-                if task.get_name() == 'disconnected':
-                    raise AuthenticationFailure(
-                        "Could not authenticate the agent. Check user and password or use auto_register=True"
-                    )
-            except:
-                raise Exception()
+            await task
 
-            logger.info(f"Agent {str(self.jid)} connected and authenticated.")
+            if task.get_name() == 'failed_all_auth':
+                raise AuthenticationFailure(
+                    "Could not authenticate the agent. Check user and password or use auto_register=True"
+                )
+            elif task.get_name() == "disconnected":
+                raise DisconnectedException(
+                    "Error during the connection with the server"
+                )
 
-    def disconnect_callback(self, _):
-        return
-        raise AuthenticationFailure(
-            "Could not authenticate the agent. Check user and password or use auto_register=True"
-        )
-
-
-
-
-    async def _async_connect_old(self) -> None:  # pragma: no cover
-        """connect and authenticate to the XMPP server. Async mode."""
-        try:
-            #self.conn_coro = self.client.connected()
-            self.conn_coro = self.client._connect_routine()
-            aenter = type(self.conn_coro).__aenter__(self.conn_coro)
-            self.stream = await aenter
-            logger.info(f"Agent {str(self.jid)} connected and authenticated.")
-        except aiosasl.AuthenticationFailure:
-            raise AuthenticationFailure(
-                "Could not authenticate the agent. Check user and password or use auto_register=True"
-            )
+        logger.info(f"Agent {str(self.jid)} connected and authenticated.")
 
     async def _async_register(self) -> None:  # pragma: no cover
         """Register the agent in the XMPP server from a coroutine."""

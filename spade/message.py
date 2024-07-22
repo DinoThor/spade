@@ -39,22 +39,22 @@ class MessageBase(object):
             self.metadata = metadata
 
     @classmethod
-    def from_node(cls, node: aioxmpp.Message) -> Type["MessageBase"]:
+    def from_node(cls, node: slixmpp.Message) -> Type["MessageBase"]:
         """
-        Creates a new spade.message.Message from an aixoxmpp.stanza.Message
+        Creates a new spade.message.Message from a slixmpp.stanza.Message
 
         Args:
-          node (aioxmpp.stanza.Message): an aioxmpp Message
+          node (slixmpp.stanza.Message): a slixmpp Message
 
         Returns:
           spade.message.Message: a new spade Message
 
         """
-        if not isinstance(node, aioxmpp.stanza.Message):
-            raise AttributeError("node must be a aioxmpp.stanza.Message instance")
+        if not isinstance(node, slixmpp.stanza.Message):
+            raise AttributeError("node must be a slixmpp.stanza.Message instance")
         msg = cls()
-        msg._to = node.to
-        msg._sender = node.from_
+        msg._to = node['to']
+        msg._sender = node['from']
         if None in node.body:
             msg.body = node.body[None]
         else:
@@ -62,7 +62,7 @@ class MessageBase(object):
                 msg.body = node.body[key]
                 break
 
-        for data in node.xep0004_data:
+        for data in [pl for pl in node.get_payload() if pl.tag == '{jabber:x:data}x']:
             if data.title == SPADE_X_METADATA:
                 for field in data.fields:
                     if field.var != "_thread_node":
@@ -73,12 +73,12 @@ class MessageBase(object):
         return msg
 
     @property
-    def to(self) -> aioxmpp.JID:
+    def to(self) -> slixmpp.JID:
         """
         Gets the jid of the receiver.
 
         Returns:
-          aioxmpp.JID: jid of the receiver
+          slixmpp.JID: jid of the receiver
 
         """
         return self._to
@@ -94,15 +94,15 @@ class MessageBase(object):
         """
         if jid is not None and not isinstance(jid, str):
             raise TypeError("'to' MUST be a string")
-        self._to = aioxmpp.JID.fromstr(jid) if jid is not None else None
+        self._to = slixmpp.JID(jid) if jid is not None else None
 
     @property
-    def sender(self) -> aioxmpp.JID:
+    def sender(self) -> slixmpp.JID:
         """
         Get jid of the sender
 
         Returns:
-          aioxmpp.JID: jid of the sender
+          slixmpp.JID: jid of the sender
 
         """
         return self._sender
@@ -118,7 +118,7 @@ class MessageBase(object):
         """
         if jid is not None and not isinstance(jid, str):
             raise TypeError("'sender' MUST be a string")
-        self._sender = aioxmpp.JID.fromstr(jid) if jid is not None else None
+        self._sender = slixmpp.JID(jid) if jid is not None else None
 
     @property
     def body(self) -> str:
@@ -256,7 +256,6 @@ class Message(MessageBase):
           slixmpp.stanza.Message: the message prepared to be sent
 
         """
-
         msg = slixmpp.stanza.Message()
         msg['to'] = self.to
         msg['from'] = self.sender
@@ -267,8 +266,6 @@ class Message(MessageBase):
         if len(self.metadata):
             form = Form()
             form['type'] = 'form'
-            #data = forms_xso.Data(type_=forms_xso.DataType.FORM)
-
             for name, value in self.metadata.items():
                 form.add_field(
                     var=name,
@@ -276,31 +273,14 @@ class Message(MessageBase):
                     value=value
                 )
 
-                #data.fields.append(
-                #    forms_xso.Field(
-                #        var=name,
-                #       type_=forms_xso.FieldType.TEXT_SINGLE,
-                #       values=[value],
-                #   )
-                #)
-
             if self.thread:
                 form.add_field(
                     var='_thread_node',
                     ftype='text-single',
                     value=self.thread
                 )
-                #data.fields.append(
-                #    forms_xso.Field(
-                #        var="_thread_node",
-                #        type_=forms_xso .FieldType.TEXT_SINGLE,
-                #        values=[self.thread],
-                #    )
-                #)
 
             form['title'] = SPADE_X_METADATA
-            #data.title = SPADE_X_METADATA
-            #msg.xep0004_data = [data]
             msg.append(form)
 
         return msg
