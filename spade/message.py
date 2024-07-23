@@ -55,20 +55,21 @@ class MessageBase(object):
         msg = cls()
         msg._to = node['to']
         msg._sender = node['from']
-        if None in node.body:
-            msg.body = node.body[None]
-        else:
-            for key in node.body.keys():
-                msg.body = node.body[key]
+
+        if type(node['body']) == dict:
+            for body in node['body'].values():
+                msg.body = body
                 break
+        else:
+            msg.body = node['body']
 
         for data in [pl for pl in node.get_payload() if pl.tag == '{jabber:x:data}x']:
-            if data.title == SPADE_X_METADATA:
-                for field in data.fields:
-                    if field.var != "_thread_node":
-                        msg.set_metadata(field.var, field.values[0])
+            if data.find('{jabber:x:data}title').text == SPADE_X_METADATA:
+                for field in data.findall('{jabber:x:data}field'):
+                    if field.attrib['var'] != "_thread_node":
+                        msg.set_metadata(field.attrib['var'], field.find('{jabber:x:data}value').text)
                     else:
-                        msg.thread = field.values[0]
+                        msg.thread = field.find('{jabber:x:data}value').text
 
         return msg
 

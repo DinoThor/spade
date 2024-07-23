@@ -2,6 +2,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import aioxmpp
+import slixmpp
 
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.container import Container
@@ -100,7 +101,7 @@ async def test_send_message_to_outer_with_container():
 
     args, kwargs = behaviour._xmpp_send.await_args
     msg_arg = kwargs["msg"]
-    assert msg_arg.to == aioxmpp.JID.fromstr("to@outerhost")
+    assert msg_arg.to == slixmpp.JID("to@outerhost")
 
     await agent.stop()
 

@@ -6,6 +6,7 @@ import copy
 
 import aioxmpp
 import aioxmpp.forms.xso as forms_xso
+from slixmpp.plugins.xep_0004 import Form
 import pytest
 import slixmpp
 
@@ -19,8 +20,7 @@ def test_prepare(message):
     assert aiomsg['body'] == "message body"
 
     for form in [pl for pl in aiomsg.get_payload() if pl.tag == '{jabber:x:data}x']:
-        title = form.find('{jabber:x:data}title')
-        if title.text == SPADE_X_METADATA:
+        if form.find('{jabber:x:data}title').text == SPADE_X_METADATA:
             for field in form.findall('{jabber:x:data}field'):
                 if field.attrib['var'] == "_thread_node":
                     assert field.find('{jabber:x:data}value').text == "thread-id"
@@ -44,9 +44,12 @@ def test_message_from_node_attribute_error():
 
 
 def test_body_with_languages():
-    msg = aioxmpp.Message(type_=aioxmpp.MessageType.CHAT)
-    msg.body["en"] = "Hello World"
-    msg.body["es"] = "Hola Mundo"
+    msg = slixmpp.Message()
+    msg.chat()
+    msg['body'] = {
+        'en': 'Hello World',
+        'es': 'Hola Mundo'
+    }
 
     new_msg = Message.from_node(msg)
     assert new_msg.body == "Hello World"
@@ -56,28 +59,45 @@ def test_body_with_languages():
 
 
 def test_message_from_node():
-    aiomsg = aioxmpp.Message(type_=aioxmpp.MessageType.CHAT)
+    slimsg = slixmpp.Message()
+    slimsg.chat()
     data = forms_xso.Data(type_=forms_xso.DataType.FORM)
 
-    data.fields.append(
-        forms_xso.Field(
-            var="performative",
-            type_=forms_xso.FieldType.TEXT_SINGLE,
-            values=["request"],
-        )
+    data = Form()
+    data['type'] = 'form'
+
+    data.add_field(
+        var="performative",
+        ftype='text-single',
+        value="request"
     )
 
-    data.fields.append(
-        forms_xso.Field(
-            var="_thread_node",
-            type_=forms_xso.FieldType.TEXT_SINGLE,
-            values=["thread-id"],
-        )
-    )
-    data.title = SPADE_X_METADATA
-    aiomsg.xep0004_data = [data]
+    # data.fields.append(
+    #     forms_xso.Field(
+    #         var="performative",
+    #         type_=forms_xso.FieldType.TEXT_SINGLE,
+    #         values=["request"],
+    #     )
+    # )
 
-    msg = Message.from_node(aiomsg)
+    data.add_field(
+        var="_thread_node",
+        ftype='text-single',
+        value="thread-id"
+    )
+
+    # data.fields.append(
+    #     forms_xso.Field(
+    #         var="_thread_node",
+    #         type_=forms_xso.FieldType.TEXT_SINGLE,
+    #         values=["thread-id"],
+    #     )
+    # )
+
+    data['title'] = SPADE_X_METADATA
+    slimsg.append(data)
+
+    msg = Message.from_node(slimsg)
 
     assert msg.thread == "thread-id"
     assert msg.get_metadata("performative") == "request"
@@ -90,11 +110,11 @@ def test_thread_empty():
     assert msg.thread is None
     assert msg.metadata == {}
 
-    aiomsg = msg.prepare()
-    for data in aiomsg.xep0004_data:
-        if data.title == SPADE_X_METADATA:
-            for field in data.fields:
-                assert field.var != "_thread_node"
+    slimsg = msg.prepare()
+    for data in [pl for pl in slimsg.get_payload() if pl.tag == '{jabber:x:data}x']:
+        if data.findall('{jabber:x:data}title').text == SPADE_X_METADATA:
+            for field in data.findall('{jabber:x:data}field'):
+                assert field.attrib['var'] != "_thread_node"
 
 
 def test_equal(message):
@@ -160,7 +180,7 @@ def test_to_is_string():
 
 def test_to_is_not_string():
     with pytest.raises(TypeError):
-        Message(to=aioxmpp.JID.fromstr("agent@fakeserver"))
+        Message(to=slixmpp.JID("agent@fakeserver"))
 
 
 def test_to_set_string():
@@ -185,7 +205,7 @@ def test_sender_is_string():
 
 def test_sender_is_not_string():
     with pytest.raises(TypeError):
-        Message(sender=aioxmpp.JID.fromstr("agent@fakeserver"))
+        Message(sender=slixmpp.JID("agent@fakeserver"))
 
 
 def test_sender_set_string():

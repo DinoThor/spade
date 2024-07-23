@@ -118,14 +118,17 @@ class Agent(object):
         """
         await self._hook_plugin_before_connection()
 
-        if auto_register:
-            pass
-
         # obtain an instance of the service
         #self.message_dispatcher = self.client.summon(SimpleMessageDispatcher)
 
         # Presence service
         # self.presence = PresenceManager(self)
+
+        self.client = XMPPClient(
+            self.jid,
+            self.password,
+            self.verify_security
+        )
 
         await self._async_connect()
 
@@ -150,25 +153,18 @@ class Agent(object):
 
     async def _hook_plugin_before_connection(self) -> None:
         """
-        Overload this method to hook a plugin before connetion is done
+        Overload this method to hook a plugin before connection is done
         """
         pass
 
     async def _hook_plugin_after_connection(self) -> None:
         """
-        Overload this method to hook a plugin after connetion is done
+        Overload this method to hook a plugin after connection is done
         """
         pass
 
     async def _async_connect(self) -> None:  # pragma: no cover
         """connect and authenticate to the XMPP server. Async mode."""
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-
-        self.client = slixmpp.ClientXMPP(self.jid, self.password)
-
-        if not self.verify_security:
-            self.ssl_context.check_hostname = False
-            self.ssl_context.verify_mode = ssl.CERT_NONE
 
         self.client.connected_event = asyncio.Event()
         self.client.disconnected_event = asyncio.Event()
@@ -181,6 +177,7 @@ class Agent(object):
         self.client.add_event_handler('session_start', lambda _: self.client.connected_event.set())
         self.client.add_event_handler('disconnected', lambda _: self.client.disconnected_event.set())
         self.client.add_event_handler('failed_all_auth', lambda _: self.client.failed_auth_event.set())
+        self.client.add_event_handler('message', self._message_received)
 
         self.client.connect()
 
@@ -195,7 +192,7 @@ class Agent(object):
         for task in done:
             await task
 
-            if task.get_name() == 'failed_all_auth':
+            if task.get_name() == 'failed_auth':
                 raise AuthenticationFailure(
                     "Could not authenticate the agent. Check user and password or use auto_register=True"
                 )
@@ -205,13 +202,6 @@ class Agent(object):
                 )
 
         logger.info(f"Agent {str(self.jid)} connected and authenticated.")
-
-    async def _async_register(self) -> None:  # pragma: no cover
-        """Register the agent in the XMPP server from a coroutine."""
-        metadata = aioxmpp.make_security_layer(None, no_verify=not self.verify_security)
-        query = ibr.Query(self.jid.localpart, self.password)
-        _, stream, features = await aioxmpp.node.connect_xmlstream(self.jid, metadata)
-        await ibr.register(stream, query)
 
     async def setup(self) -> None:
         """
@@ -251,7 +241,7 @@ class Agent(object):
           jid (aioxmpp.JID): an XMPP identifier
 
         Returns:
-          str: an URL for the gravatar
+          str: a URL for the gravatar
 
         """
         digest = md5(jid.encode("utf-8")).hexdigest()
@@ -338,7 +328,7 @@ class Agent(object):
 
         if self.is_alive():
             # Disconnect from XMPP server
-            self.client.stop()
+            self.client.disconnect()
             aexit = self.conn_coro.__aexit__(*sys.exc_info())
             await aexit
             logger.info("Client disconnected.")
@@ -382,7 +372,7 @@ class Agent(object):
         else:
             return None
 
-    def _message_received(self, msg: aioxmpp.Message) -> List[Task]:
+    def _message_received(self, msg: slixmpp.Message) -> List[Task]:
         """
         Callback run when an XMPP Message is reveived.
         This callback delivers the message to every behaviour
