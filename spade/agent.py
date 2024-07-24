@@ -328,9 +328,7 @@ class Agent(object):
 
         if self.is_alive():
             # Disconnect from XMPP server
-            self.client.disconnect()
-            aexit = self.conn_coro.__aexit__(*sys.exc_info())
-            await aexit
+            await self.client.disconnect()
             logger.info("Client disconnected.")
 
         self._alive.clear()

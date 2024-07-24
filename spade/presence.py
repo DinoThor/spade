@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 import aioxmpp
+import slixmpp
 from aioxmpp import PresenceState, PresenceShow
 
 
@@ -15,20 +16,29 @@ class PresenceManager(object):
 
     def __init__(self, agent):
         self.agent = agent
-        self.client = agent.client
-        self.roster = self.client.summon(aioxmpp.RosterClient)
-        self.presenceclient = self.client.summon(aioxmpp.PresenceClient)
-        self.presenceserver = self.client.summon(aioxmpp.PresenceServer)
+        self.client: slixmpp.ClientXMPP = agent.client
+        # self.roster = self.client.summon(aioxmpp.RosterClient)
+        # self.presenceclient = self.client.summon(aioxmpp.PresenceClient)
+        # self.presenceserver = self.client.summon(aioxmpp.PresenceServer)
 
         self._contacts = {}
 
         self.approve_all = False
 
+        self.client.add_event_handler()
+
+        self.client.add_event_handler('presence_available', self._on_available)
+        self.client.add_event_handler('presence_unavailable', self._on_unavailable)
+
+
         self.presenceclient.on_bare_available.connect(self._on_bare_available)
-        self.presenceclient.on_available.connect(self._on_available)
+        # self.presenceclient.on_available.connect(self._on_available)
         self.presenceclient.on_bare_unavailable.connect(self._on_bare_unavailable)
-        self.presenceclient.on_unavailable.connect(self._on_unavailable)
+        # self.presenceclient.on_unavailable.connect(self._on_unavailable)
         self.presenceclient.on_changed.connect(self._on_changed)
+
+
+        self.client.add_event_handler('')
 
         self.roster.on_subscribe.connect(self._on_subscribe)
         self.roster.on_subscribed.connect(self._on_subscribed)

@@ -22,13 +22,10 @@ class XMPPClient(ClientXMPP):
             self.ssl_context.verify_mode = ssl.CERT_NONE
 
         self.add_event_handler("session_start", self.session_start)
-        # self.add_event_handler("message", self.message)
         self.add_event_handler("register", self.register)
 
         self.register_plugin('xep_0199')    # XMPP Ping
         self.register_plugin('xep_0077')    # In-band-registration
-
-        self['xep_0077'].force_registration = True
 
     def session_start(self, event):
         self.send_presence()
@@ -50,4 +47,4 @@ class XMPPClient(ClientXMPP):
             """
             pass
         except IqTimeout:
-            raise RegistrationException("Error: Tiempo de espera agotado.")
+            raise RegistrationException("Timeout error during the register process.")

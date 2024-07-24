@@ -25,8 +25,6 @@ async def test_create_agent(mocker):
 
     await agent.stop()
 
-    agent.conn_coro.__aexit__.assert_called_once()
-
     assert agent.is_alive() is False
 
 

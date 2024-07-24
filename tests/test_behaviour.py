@@ -327,7 +327,6 @@ async def test_send_message_to_external_agent():
     agent = MockedAgentFactory()
     await agent.start(auto_register=False)
 
-    agent.client = MagicMock()
     agent.client.send = AsyncMock()
     behaviour = SendBehaviour()
     agent.add_behaviour(behaviour)
@@ -360,7 +359,6 @@ async def test_send_message_without_sender():
     agent = MockedAgentFactory()
     await agent.start(auto_register=False)
 
-    agent.client = MagicMock()
     agent.client.send = AsyncMock()
     behaviour = SendBehaviour()
     agent.add_behaviour(behaviour)
@@ -368,7 +366,7 @@ async def test_send_message_without_sender():
     await behaviour.join()
 
     msg_arg = agent.client.send.await_args[0][0]
-    assert msg_arg.from_ == aioxmpp.JID.fromstr("fake@jid")
+    assert msg_arg['from'] == slixmpp.JID("fake@jid")
 
     await agent.stop()
 

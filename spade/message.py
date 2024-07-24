@@ -6,6 +6,7 @@ import aioxmpp.forms.xso as forms_xso
 import slixmpp.stanza
 from slixmpp.plugins.xep_0004 import Form
 
+import spade.message
 
 SPADE_X_METADATA = "spade:x:metadata"
 
@@ -227,6 +228,8 @@ class MessageBase(object):
         return id(self)
 
     def __eq__(self, other: Type["MessageBase"]):
+        if type(other) is not spade.message.Message:
+            return False
         return self.match(other)
 
 

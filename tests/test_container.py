@@ -57,7 +57,6 @@ async def test_send_message_with_container():
     agent = MockedAgentFactory()
     await agent.start(auto_register=False)
 
-    agent.client = MagicMock()
     agent.client.send = AsyncMock()
     behaviour = SendBehaviour()
     agent.add_behaviour(behaviour)
