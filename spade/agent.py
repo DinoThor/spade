@@ -118,17 +118,13 @@ class Agent(object):
         """
         await self._hook_plugin_before_connection()
 
-        # obtain an instance of the service
-        #self.message_dispatcher = self.client.summon(SimpleMessageDispatcher)
-
-        # Presence service
-        # self.presence = PresenceManager(self)
-
         self.client = XMPPClient(
             self.jid,
             self.password,
             self.verify_security
         )
+        # Presence service
+        self.presence = PresenceManager(self)
 
         await self._async_connect()
 

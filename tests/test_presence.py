@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+import slixmpp
 from aioxmpp import PresenceState, PresenceShow, JID, PresenceType, Presence
 from aioxmpp.roster.xso import Item as XSOItem
 
@@ -13,9 +14,8 @@ async def test_get_state_not_available():
 
     await agent.start(auto_register=False)
 
-    assert type(agent.presence.state) == PresenceState
-    assert agent.presence.state.available is False
-    assert agent.presence.state.show == PresenceShow.NONE
+    assert agent.presence.state is None
+    assert agent.presence.status is None
     assert not agent.presence.is_available()
 
 
