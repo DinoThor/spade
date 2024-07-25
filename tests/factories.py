@@ -31,8 +31,8 @@ class MockedPresenceConnectedAgent(Agent):
         if status is None:
             status = {}
         self._async_connect = AsyncMock()
-        self.conn_coro = Mock()
-        self.conn_coro.__aexit__ = AsyncMock()
+        # self.conn_coro = Mock()
+        # self.conn_coro.__aexit__ = AsyncMock()
 
         self.available = available
         self.show = show
@@ -40,7 +40,7 @@ class MockedPresenceConnectedAgent(Agent):
         self.priority = priority
 
     def mock_presence(self):
-        show = self.show if self.show is not None else PresenceShow.NONE
+        show = self.show if self.show is not None else None
         available = self.available if self.available is not None else False
         state = PresenceState(available, show)
         self.presence.presenceserver.set_presence(state, self.status, self.priority)

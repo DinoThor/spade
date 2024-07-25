@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, Optional
 
 import aioxmpp
@@ -11,6 +12,14 @@ class ContactNotFound(Exception):
     pass
 
 
+class PresenceStates(Enum):
+    extender_away = 'XA'
+    away = 'AWAY'
+    chat = 'CHAT'
+    dnd = 'DND'
+    none = 'NONE'
+
+
 class PresenceManager(object):
     """ """
 
@@ -22,6 +31,10 @@ class PresenceManager(object):
 
         self.approve_all = False
 
+        self.current_state = None
+        self.current_status = None
+        self.current_priority = None
+
         self.client.add_event_handler('presence_available', self._on_available)
         self.client.add_event_handler('presence_unavailable', self._on_unavailable)
         self.client.add_event_handler('changed_status', self._on_changed)
@@ -31,50 +44,6 @@ class PresenceManager(object):
         self.client.add_event_handler('presence_unsubscribe', self._on_unsubscribe)
         self.client.add_event_handler('presence_unsubscribed', self._on_unsubscribed)
 
-    @property
-    def state(self) -> slixmpp.Presence.types:
-        """
-        The currently set presence state (as slixmpp.Presence.types)
-        which is broadcast when the client connects and when the presence is
-        re-emitted.
-
-        Returns:
-            slixmpp.Presence.types: the presence state of the agent
-        """
-        return self.client.current_state
-
-    @property
-    def status(self) -> slixmpp.Presence.showtypes:
-        """
-        The currently set textual presence status which is broadcast when the
-        client connects and when the presence is re-emitted.
-
-        This attribute cannot be written. It does not reflect the actual
-        presence seen by others. For example when the client is in fact
-        offline, others will see unavailable presence no matter what is set
-        here.
-
-        Returns:
-            dict: a dict with the status in different languages (default key is None)
-        """
-        return self.client.current_status
-
-    @property
-    def priority(self) -> int:
-        """
-        The currently set priority which is broadcast when the client connects
-        and when the presence is re-emitted.
-
-        This attribute cannot be written. It does not reflect the actual
-        presence seen by others. For example when the client is in fact
-        offline, others will see unavailable presence no matter what is set
-        here.
-
-        Returns:
-            int: the priority of the connection
-        """
-        return self.client.current_priority
-
     def is_available(self) -> bool:
         """
         Returns the available flag from the state
@@ -83,9 +52,9 @@ class PresenceManager(object):
           bool: wether the agent is available or not
 
         """
-        return self.client.current_state == 'available'
+        return self.client.current_state is not None
 
-    def set_available(self, show: Optional[aioxmpp.PresenceShow] = PresenceShow.NONE):
+    def set_available(self, show: Optional[PresenceStates] = PresenceStates.none):
         """
         Sets the agent availability to True.
 
@@ -94,7 +63,7 @@ class PresenceManager(object):
 
         """
         show = self.state if show is 'none' else show
-        self.set_presence(PresenceState(available=True, show=show))
+        self.client.
 
     def set_unavailable(self) -> None:
         """Sets the agent availability to False."""

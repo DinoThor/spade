@@ -21,10 +21,7 @@ class XMPPClient(ClientXMPP):
             self.ssl_context.check_hostname = False
             self.ssl_context.verify_mode = ssl.CERT_NONE
 
-        self.current_state = None
-        self.current_status = None
-        self.current_priority = None
-        self.client_roster
+
 
         self.add_event_handler("session_start", self.session_start)
         self.add_event_handler("register", self.register)
