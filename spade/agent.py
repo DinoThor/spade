@@ -128,13 +128,6 @@ class Agent(object):
 
         await self._async_connect()
 
-        # register a message callback here
-        #self.message_dispatcher.register_callback(
-        #    aioxmpp.MessageType.CHAT,
-        #    None,
-        #    self._message_received,
-        #)
-
         await self._hook_plugin_after_connection()
 
         await self.setup()

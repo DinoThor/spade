@@ -2,21 +2,22 @@ from unittest.mock import Mock
 
 import pytest
 import slixmpp
-from aioxmpp import PresenceState, PresenceShow, JID, PresenceType, Presence
+from aioxmpp import PresenceState, JID, PresenceType, Presence
 from aioxmpp.roster.xso import Item as XSOItem
 
-from spade.presence import ContactNotFound
+from spade.presence import ContactNotFound, PresenceShow
 from .factories import MockedPresenceAgentFactory
 
+from slixmpp.stanza.roster import RosterItem
 
 async def test_get_state_not_available():
     agent = MockedPresenceAgentFactory(available=False, show=PresenceShow.NONE)
 
     await agent.start(auto_register=False)
 
-    assert agent.presence.state is None
-    assert agent.presence.status is None
-    assert not agent.presence.is_available()
+    assert agent.presence.current_available is None
+    assert agent.presence.current_status is None
+    assert agent.presence.current_show is PresenceShow.NONE
 
 
 async def test_get_state_available():
@@ -26,8 +27,7 @@ async def test_get_state_available():
 
     agent.mock_presence()
 
-    assert agent.presence.state.available
-    assert agent.presence.is_available()
+    assert agent.presence.current_available
 
 
 async def test_set_available():
@@ -48,7 +48,7 @@ async def test_set_available_with_show():
     agent.presence.set_available(show=PresenceShow.CHAT)
 
     assert agent.presence.is_available()
-    assert agent.presence.state.show == PresenceShow.CHAT
+    assert agent.presence.current_show == PresenceShow.CHAT
 
 
 async def test_set_unavailable():
@@ -68,7 +68,7 @@ async def test_get_state_show():
 
     agent.mock_presence()
 
-    assert agent.presence.state.show == PresenceShow.AWAY
+    assert agent.presence.current_show == PresenceShow.AWAY
 
 
 async def test_get_status_empty():
@@ -126,7 +126,7 @@ async def test_set_presence_available():
 
     await agent.start(auto_register=False)
 
-    agent.presence.set_presence(state=PresenceState(available=True))
+    agent.presence.set_available()
 
     assert agent.presence.is_available()
 
@@ -136,7 +136,7 @@ async def test_set_presence_unavailable():
 
     await agent.start(auto_register=False)
 
-    agent.presence.set_presence(state=PresenceState(available=False))
+    agent.presence.set_unavailable()
 
     assert not agent.presence.is_available()
 
@@ -176,12 +176,11 @@ async def test_set_presence():
 
     await agent.start(auto_register=False)
 
-    agent.presence.set_presence(
-        state=PresenceState(True, PresenceShow.PLAIN), status="Lunch", priority=2
-    )
+    agent.presence.set_available()
+    agent.presence.set_presence(show=PresenceShow.NONE, status="Lunch", priority=2)
 
     assert agent.presence.is_available()
-    assert agent.presence.state.show == PresenceShow.PLAIN
+    assert agent.presence.current_show == PresenceShow.NONE
     assert agent.presence.status == {None: "Lunch"}
     assert agent.presence.priority == 2
 
@@ -199,11 +198,12 @@ async def test_get_contacts(jid):
 
     await agent.start(auto_register=False)
 
-    item = XSOItem(jid=jid)
-    item.approved = True
-    item.name = "My Friend"
+    item = RosterItem()
+    item['jid'] = jid
+    item['name'] = "My Friend"
+    item['approved'] = True
 
-    agent.presence.roster._update_entry(item)
+    agent.presence.roster.add(item)
 
     contacts = agent.presence.get_contacts()
 

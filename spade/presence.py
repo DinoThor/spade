@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import aioxmpp
 import slixmpp
-from aioxmpp import PresenceState, PresenceShow
+from aioxmpp import PresenceState
 
 
 class ContactNotFound(Exception):
@@ -12,12 +12,15 @@ class ContactNotFound(Exception):
     pass
 
 
-class PresenceStates(Enum):
-    extender_away = 'XA'
-    away = 'AWAY'
-    chat = 'CHAT'
-    dnd = 'DND'
-    none = 'NONE'
+class PresenceShow(Enum):
+    """
+    Enum that contains the possible show values to append in the presence stanzas
+    """
+    EXTENDED_AWAY = 'xa'
+    AWAY = 'away'
+    CHAT = 'chat'
+    DND = 'dnd'
+    NONE = None
 
 
 class PresenceManager(object):
@@ -25,54 +28,95 @@ class PresenceManager(object):
 
     def __init__(self, agent):
         self.agent = agent
-        self.client = agent.client
+        self.client: slixmpp.ClientXMPP = agent.client
 
-        self._contacts = {}
+        self._contacts: Dict[slixmpp.JID, dict] = {}
 
         self.approve_all = False
 
-        self.current_state = None
-        self.current_status = None
-        self.current_priority = None
+        self.current_available: Union[bool, None] = None
+        self.current_status: Union[Dict[str, str], None] = None
+        self.current_show: PresenceShow = PresenceShow.NONE
+        self.current_priority: int = 0
 
         self.client.add_event_handler('presence_available', self._on_available)
         self.client.add_event_handler('presence_unavailable', self._on_unavailable)
         self.client.add_event_handler('changed_status', self._on_changed)
+
+        self.roster = self.client.roster
 
         self.client.add_event_handler('presence_subscribe', self._on_subscribe)
         self.client.add_event_handler('presence_subscribed', self._on_subscribed)
         self.client.add_event_handler('presence_unsubscribe', self._on_unsubscribe)
         self.client.add_event_handler('presence_unsubscribed', self._on_unsubscribed)
 
+    @property
+    def available(self) -> bool:
+        """
+        Availability property. A boolean value that indicates internally
+        if a client is available or not.
+
+        :return: The availability of the client
+        """
+        return self.current_available
+
+    @property
+    def status(self) -> Union[Dict[str, str], None]:
+        """
+        State property. A human-readable string value appended to the presence stanza
+        indicating a more detailed presence state
+
+        :return: The availability of the client
+        """
+        return self.current_status
+
+    @property
+    def show(self) -> PresenceShow:
+        """
+        Show property. A more specific availability value.
+        Used internally by the client/server. Not human-readable
+
+        :return: A value of PresenceShow
+        """
+        return self.current_show
+
+    @property
+    def priority(self) -> int:
+        """
+        Priority property of the presence stanzas sent by the client
+
+        :return: An integer between the values -128 and 127
+        (range defined in the RFC 6121)
+        """
+        return self.current_priority
+
     def is_available(self) -> bool:
         """
-        Returns the available flag from the state
-
-        Returns:
-          bool: wether the agent is available or not
-
+        :return: The availability of the client
         """
-        return self.client.current_state is not None
+        return self.current_available
 
-    def set_available(self, show: Optional[PresenceStates] = PresenceStates.none):
+    def set_available(self, show: Optional[PresenceShow] = PresenceShow.NONE, status: Optional[str] = None):
         """
         Sets the agent availability to True.
 
         Args:
-          show (aioxmpp.PresenceShow, optional): the show state of the presence (Default value = PresenceShow.NONE)
+          show (spade.PresenceShow, optional): the show state of the presence (Default value = PresenceShow.NONE)
 
         """
-        show = self.state if show is 'none' else show
-        self.client.
+        self.current_available = True
+        self.current_show = show if show is not None else self.current_show
+        self.current_status = status if status is not None else self.current_status
 
-    def set_unavailable(self) -> None:
+    def set_unavailable(self, show: Optional[PresenceShow] = PresenceShow.NONE, status: Optional[str] = None) -> None:
         """Sets the agent availability to False."""
-        show = PresenceShow.NONE
-        self.set_presence(PresenceState(available=False, show=show))
+        self.client.current_state = False
+        self.current_show = show if show is not None else self.current_show
+        self.current_status = status if status is not None else self.current_status
 
     def set_presence(
         self,
-        state: Optional[aioxmpp.PresenceState] = None,
+        show: Optional[PresenceShow] = PresenceShow.NONE,
         status: Optional[str] = None,
         priority: Optional[int] = None,
     ):
@@ -81,16 +125,27 @@ class PresenceManager(object):
         If the client is currently connected, the new presence is broadcast immediately.
 
         Args:
-          state(aioxmpp.PresenceState, optional): New presence state to broadcast (Default value = None)
+          show(PresenceShow, optional): New presence state to broadcast (Default value = None)
           status(dict or str, optional): New status information to broadcast (Default value = None)
           priority (int, optional): New priority for the resource (Default value = None)
 
         """
-        self.client.current_state = state if state is not None else self.state
-        self.client.current_status = status if status is not None else self.status
-        self.client.current_priority = priority if priority is not None else self.priority
+        if status is not None:
+            if type(status) is str:
+                self.current_status = {None: status}
+            elif type(status) is dict:
+                self.current_status = status
 
-    def get_contacts(self) -> Dict[str, Dict]:
+        self.current_show = show if show is not None else self.current_show
+        self.current_priority = priority if priority is not None else self.current_priority
+        self.client.send_presence(
+            pshow=show.value if show is not None else None,
+            pstatus=status,
+            ppriority=priority,
+            ptype='unavailable' if self.current_available is None or not self.current_available else None
+        )
+
+    def get_contacts(self) -> Dict[slixmpp.JID, Dict]:
         """
         Returns list of contacts
 
@@ -98,11 +153,11 @@ class PresenceManager(object):
           dict: the roster of contacts
 
         """
-        for jid, item in self.client.client_roster.items():
+        for jid, item in dict(self.client.client_roster).items():
             try:
-                self._contacts[jid.bare].update(item.export_as_json())
+                self._contacts[slixmpp.JID(jid)].update(dict(item))
             except KeyError:
-                self._contacts[jid.bare] = item.export_as_json()
+                self._contacts[slixmpp.JID(jid)] = dict(item)
 
         return self._contacts
 
@@ -118,11 +173,11 @@ class PresenceManager(object):
 
         """
         try:
-            return self.get_contacts()[jid.bare]
+            return self.get_contacts()[slixmpp.JID(jid)]
         except KeyError:
             raise ContactNotFound
         except AttributeError:
-            raise AttributeError("jid must be an aioxmpp.JID object")
+            raise AttributeError("jid must be an slixmpp.JID")
 
     def _update_roster_with_presence(self, stanza: slixmpp.Presence) -> None:
         """ """
@@ -141,7 +196,6 @@ class PresenceManager(object):
           peer_jid (str): the JID you ask for subscriptiion
 
         """
-        # self.roster.subscribe(aioxmpp.JID.fromstr(peer_jid).bare())
         self.client.send_presence_subscription(
             pto=slixmpp.JID(peer_jid).bare,
             ptype='subscribe'
@@ -155,7 +209,6 @@ class PresenceManager(object):
           peer_jid (str): the JID you ask for unsubscriptiion
 
         """
-        # self.roster.unsubscribe(aioxmpp.JID.fromstr(peer_jid).bare())
         self.client.send_presence_subscription(
             pto=slixmpp.JID(peer_jid).bare,
             ptype='unsubscribe'
@@ -169,16 +222,10 @@ class PresenceManager(object):
           peer_jid (str): the JID to approve
 
         """
-        # self.roster.approve(aioxmpp.JID.fromstr(peer_jid).bare())
         self.client.send_presence_subscription(
             pto=slixmpp.JID(peer_jid).bare,
             ptype='subscribed'
         )
-
-    # def _on_bare_available(self, stanza: slixmpp.Presence) -> None:
-    #     """ """
-    #     self._update_roster_with_presence(stanza)
-    #     self.on_available(str(stanza.from_), stanza)
 
     def _on_available(self, full_jid, stanza: slixmpp.Presence) -> None:
         """ """
@@ -189,11 +236,6 @@ class PresenceManager(object):
         """ """
         self._update_roster_with_presence(stanza)
         self.on_unavailable(str(stanza['from']), stanza)
-
-    # def _on_bare_unavailable(self, stanza: aioxmpp.Presence) -> None:
-    #     """ """
-    #     self._update_roster_with_presence(stanza)
-    #     self.on_unavailable(str(stanza.from_), stanza)
 
     def _on_changed(self, from_, stanza: aioxmpp.Presence) -> None:
         """ """
@@ -216,12 +258,6 @@ class PresenceManager(object):
     def _on_unsubscribe(self, stanza: slixmpp.Presence) -> None:
         """ """
         if self.approve_all:
-            # self.client.stream.enqueue(
-            #     aioxmpp.Presence(
-            #         type_=aioxmpp.structs.PresenceType.UNSUBSCRIBED,
-            #         to=stanza.from_.bare(),
-            #     )
-            # )
             self.client.send_presence_subscription(
                 pto=slixmpp.JID(stanza['from']).bare,
                 ptype='unsubscribed'
