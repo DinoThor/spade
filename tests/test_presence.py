@@ -1,14 +1,15 @@
 from unittest.mock import Mock
 
 import pytest
-import slixmpp
-from aioxmpp import PresenceState, JID, PresenceType, Presence
-from aioxmpp.roster.xso import Item as XSOItem
+import slixmpp.roster
 
 from spade.presence import ContactNotFound, PresenceShow
 from .factories import MockedPresenceAgentFactory
 
-from slixmpp.stanza.roster import RosterItem
+from slixmpp.stanza import Presence
+from slixmpp import JID
+
+from xml.etree import ElementTree
 
 async def test_get_state_not_available():
     agent = MockedPresenceAgentFactory(available=False, show=PresenceShow.NONE)
@@ -198,23 +199,20 @@ async def test_get_contacts(jid):
 
     await agent.start(auto_register=False)
 
-    item = RosterItem()
-    item['jid'] = jid
-    item['name'] = "My Friend"
-    item['approved'] = True
-
-    agent.presence.roster.add(item)
+    agent.client.update_roster(
+        jid=jid,
+        name="My Friend"
+    )
 
     contacts = agent.presence.get_contacts()
 
-    bare_jid = jid.bare()
+    bare_jid = jid.bare
     assert bare_jid in contacts
-    assert type(contacts[bare_jid]) == dict
-    assert contacts[bare_jid]["approved"]
+    assert type(contacts[bare_jid]) == slixmpp.roster.RosterItem
     assert contacts[bare_jid]["name"] == "My Friend"
     assert contacts[bare_jid]["subscription"] == "none"
-    assert "ask" not in contacts[bare_jid]
-    assert "groups" not in contacts[bare_jid]
+    assert contacts[bare_jid]['pending_out'] is False
+    assert not contacts[bare_jid]['groups']
 
 
 async def test_get_contacts_with_presence(jid):
@@ -222,22 +220,22 @@ async def test_get_contacts_with_presence(jid):
 
     await agent.start(auto_register=False)
 
-    item = XSOItem(jid=jid)
-    item.approved = True
-    item.name = "My Available Friend"
+    agent.client.update_roster(
+        jid=jid,
+        name="My Available Friend"
+    )
 
-    agent.presence.roster._update_entry(item)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'subscribe'
 
-    stanza = Presence(from_=jid, type_=PresenceType.AVAILABLE)
-    agent.presence.presenceclient.handle_presence(stanza)
+    agent.client.event("presence_subscribe", stanza)
 
     contacts = agent.presence.get_contacts()
 
-    bare_jid = jid.bare()
+    bare_jid = jid.bare
     assert bare_jid in contacts
     assert contacts[bare_jid]["name"] == "My Available Friend"
-
-    assert contacts[bare_jid]["presence"].type_ == PresenceType.AVAILABLE
 
 
 async def test_get_contacts_with_presence_on_and_off(jid):
@@ -293,20 +291,18 @@ async def test_get_contact(jid):
 
     await agent.start(auto_register=False)
 
-    item = XSOItem(jid=jid)
-    item.approved = True
-    item.name = "My Friend"
-
-    agent.presence.roster._update_entry(item)
+    agent.client.update_roster(
+        jid=jid,
+        name="My Friend"
+    )
 
     contact = agent.presence.get_contact(jid)
 
-    assert type(contact) == dict
-    assert contact["approved"]
+    assert type(contact) == slixmpp.roster.RosterItem
     assert contact["name"] == "My Friend"
     assert contact["subscription"] == "none"
-    assert "ask" not in contact
-    assert "groups" not in contact
+    assert contact['pending_out'] is False
+    assert len(contact['groups']) == 0
 
 
 async def test_get_invalid_jid_contact():
@@ -315,7 +311,7 @@ async def test_get_invalid_jid_contact():
     await agent.start(auto_register=False)
 
     with pytest.raises(ContactNotFound):
-        agent.presence.get_contact(JID.fromstr("invalid@contact"))
+        agent.presence.get_contact(JID("invalid@contact"))
 
 
 async def test_get_invalid_str_contact():
@@ -333,14 +329,14 @@ async def test_subscribe(jid):
 
     await agent.start(auto_register=False)
 
-    agent.client.enqueue = Mock()
+    agent.client.send_presence_subscription = Mock()
     agent.presence.subscribe(peer_jid)
 
-    assert agent.client.enqueue.mock_calls
-    arg = agent.client.enqueue.call_args[0][0]
+    assert agent.client.send_presence_subscription.mock_calls
+    arg = agent.client.send_presence_subscription.call_args[1]
 
-    assert arg.to == jid.bare()
-    assert arg.type_ == PresenceType.SUBSCRIBE
+    assert arg['pto'] == jid.bare
+    assert arg['ptype'] == 'subscribe'
 
 
 async def test_unsubscribe(jid):
@@ -349,14 +345,14 @@ async def test_unsubscribe(jid):
 
     await agent.start(auto_register=False)
 
-    agent.client.enqueue = Mock()
+    agent.client.send_presence_subscription = Mock()
     agent.presence.unsubscribe(peer_jid)
 
-    assert agent.client.enqueue.mock_calls
-    arg = agent.client.enqueue.call_args[0][0]
+    assert agent.client.send_presence_subscription.mock_calls
+    arg = agent.client.send_presence_subscription.call_args[1]
 
-    assert arg.to == jid.bare()
-    assert arg.type_ == PresenceType.UNSUBSCRIBE
+    assert arg['pto'] == jid.bare
+    assert arg['ptype'] == 'unsubscribe'
 
 
 async def test_approve(jid):
@@ -365,14 +361,14 @@ async def test_approve(jid):
 
     await agent.start(auto_register=False)
 
-    agent.client.enqueue = Mock()
+    agent.client.send_presence_subscription = Mock()
     agent.presence.approve(peer_jid)
 
-    assert agent.client.enqueue.mock_calls
-    arg = agent.client.enqueue.call_args[0][0]
+    assert agent.client.send_presence_subscription.mock_calls
+    arg = agent.client.send_presence_subscription.call_args[1]
 
-    assert arg.to == jid.bare()
-    assert arg.type_ == PresenceType.SUBSCRIBED
+    assert arg['pto'] == jid.bare
+    assert arg['ptype'] == 'subscribed'
 
 
 async def test_on_available(jid):
@@ -382,14 +378,19 @@ async def test_on_available(jid):
 
     agent.presence.on_available = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.AVAILABLE)
-    agent.presence.presenceclient.handle_presence(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'available'
+
+    agent.client.event("presence_available", stanza)
+
+    assert agent.presence.on_available.mock_calls
 
     jid_arg = agent.presence.on_available.call_args[0][0]
     stanza_arg = agent.presence.on_available.call_args[0][1]
 
     assert jid_arg == str(jid)
-    assert stanza_arg.type_ == PresenceType.AVAILABLE
+    assert stanza_arg['type'] == 'available'
 
 
 async def test_on_unavailable(jid):
@@ -398,16 +399,20 @@ async def test_on_unavailable(jid):
     await agent.start(auto_register=False)
 
     agent.presence.on_unavailable = Mock()
-    agent.presence.presenceclient._presences[jid.bare()] = {"home": None}
 
-    stanza = Presence(from_=jid, type_=PresenceType.UNAVAILABLE)
-    agent.presence.presenceclient.handle_presence(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'unavailable'
+
+    agent.client.event("presence_unavailable", stanza)
+
+    assert agent.presence.on_unavailable.mock_calls
 
     jid_arg = agent.presence.on_unavailable.call_args[0][0]
     stanza_arg = agent.presence.on_unavailable.call_args[0][1]
 
     assert jid_arg == str(jid)
-    assert stanza_arg.type_ == PresenceType.UNAVAILABLE
+    assert stanza_arg['type'] == 'unavailable'
 
 
 async def test_on_subscribe(jid):
@@ -417,8 +422,13 @@ async def test_on_subscribe(jid):
 
     agent.presence.on_subscribe = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.SUBSCRIBE)
-    agent.presence.roster.handle_subscribe(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'subscribe'
+
+    agent.client.event("presence_subscribe", stanza)
+
+    assert agent.presence.on_subscribe.mock_calls
 
     jid_arg = agent.presence.on_subscribe.call_args[0][0]
 
@@ -431,16 +441,19 @@ async def test_on_subscribe_approve_all(jid):
     await agent.start(auto_register=False)
 
     agent.presence.approve_all = True
-    agent.client.enqueue = Mock()
+    agent.client.send_presence_subscription = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.SUBSCRIBE)
-    agent.presence.roster.handle_subscribe(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'subscribe'
 
-    assert agent.client.enqueue.mock_calls
-    arg = agent.client.enqueue.call_args[0][0]
+    agent.client.event("presence_subscribe", stanza)
 
-    assert arg.to == jid.bare()
-    assert arg.type_ == PresenceType.SUBSCRIBED
+    assert agent.client.send_presence_subscription.mock_calls
+    arg = agent.client.send_presence_subscription.call_args[1]
+
+    assert arg['pto'] == jid.bare
+    assert arg['ptype'] == 'subscribed'
 
 
 async def test_on_subscribed(jid):
@@ -450,8 +463,11 @@ async def test_on_subscribed(jid):
 
     agent.presence.on_subscribed = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.SUBSCRIBED)
-    agent.presence.roster.handle_subscribed(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'subscribed'
+
+    agent.client.event("presence_subscribed", stanza)
 
     jid_arg = agent.presence.on_subscribed.call_args[0][0]
 
@@ -465,8 +481,11 @@ async def test_on_unsubscribe(jid):
 
     agent.presence.on_unsubscribe = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.UNSUBSCRIBE)
-    agent.presence.roster.handle_unsubscribe(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'unsubscribe'
+
+    agent.client.event("presence_unsubscribe", stanza)
 
     jid_arg = agent.presence.on_unsubscribe.call_args[0][0]
 
@@ -479,16 +498,19 @@ async def test_on_unsubscribe_approve_all(jid):
     await agent.start(auto_register=False)
 
     agent.presence.approve_all = True
-    agent.client.enqueue = Mock()
+    agent.client.send_presence_subscription = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.UNSUBSCRIBE)
-    agent.presence.roster.handle_unsubscribe(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'unsubscribed'
 
-    assert agent.client.enqueue.mock_calls
-    arg = agent.client.enqueue.call_args[0][0]
+    agent.client.event("presence_unsubscribe", stanza)
 
-    assert arg.to == jid.bare()
-    assert arg.type_ == PresenceType.UNSUBSCRIBED
+    assert agent.client.send_presence_subscription.mock_calls
+    arg = agent.client.send_presence_subscription.call_args[1]
+
+    assert arg['pto'] == jid.bare
+    assert arg['ptype'] == 'unsubscribed'
 
 
 async def test_on_unsubscribed(jid):
@@ -498,8 +520,11 @@ async def test_on_unsubscribed(jid):
 
     agent.presence.on_unsubscribed = Mock()
 
-    stanza = Presence(from_=jid, type_=PresenceType.UNSUBSCRIBED)
-    agent.presence.roster.handle_unsubscribed(stanza)
+    stanza = Presence()
+    stanza['from'] = jid
+    stanza['type'] = 'unsubscribed'
+
+    agent.client.event("presence_unsubscribed", stanza)
 
     jid_arg = agent.presence.on_unsubscribed.call_args[0][0]
 

@@ -155,9 +155,9 @@ class PresenceManager(object):
         """
         for jid, item in dict(self.client.client_roster).items():
             try:
-                self._contacts[slixmpp.JID(jid)].update(dict(item))
+                self._contacts[slixmpp.JID(jid)].update(item)
             except KeyError:
-                self._contacts[slixmpp.JID(jid)] = dict(item)
+                self._contacts[slixmpp.JID(jid)] = item
 
         return self._contacts
 
@@ -172,12 +172,13 @@ class PresenceManager(object):
           dict: the roster of contacts
 
         """
+        if type(jid) is not slixmpp.JID:
+            raise AttributeError("jid must be an slixmpp.JID")
+
         try:
-            return self.get_contacts()[slixmpp.JID(jid)]
+            return self.get_contacts()[jid.bare]
         except KeyError:
             raise ContactNotFound
-        except AttributeError:
-            raise AttributeError("jid must be an slixmpp.JID")
 
     def _update_roster_with_presence(self, stanza: slixmpp.Presence) -> None:
         """ """
@@ -227,17 +228,17 @@ class PresenceManager(object):
             ptype='subscribed'
         )
 
-    def _on_available(self, full_jid, stanza: slixmpp.Presence) -> None:
+    def _on_available(self, stanza: slixmpp.Presence) -> None:
         """ """
         self._update_roster_with_presence(stanza)
         self.on_available(str(stanza['from']), stanza)
 
-    def _on_unavailable(self, full_jid, stanza: slixmpp.Presence) -> None:
+    def _on_unavailable(self, stanza: slixmpp.Presence) -> None:
         """ """
         self._update_roster_with_presence(stanza)
         self.on_unavailable(str(stanza['from']), stanza)
 
-    def _on_changed(self, from_, stanza: aioxmpp.Presence) -> None:
+    def _on_changed(self, stanza: slixmpp.Presence) -> None:
         """ """
         self._update_roster_with_presence(stanza)
 
