@@ -23,6 +23,17 @@ class PresenceShow(Enum):
     NONE = None
 
 
+class PresenceType(Enum):
+    AVAILABLE = 'available'
+    UNAVAILABLE = 'unavailable'
+    ERROR = 'error'
+    PROBE = 'probe'
+    SUBSCRIBE = 'subscribe'
+    SUBSCRIBED = 'subscribed'
+    UNSUBSCRIBE = 'unsubscribe'
+    UNSUBSCRIBED = 'unsubscribed'
+
+
 class PresenceManager(object):
     """ """
 
@@ -30,7 +41,7 @@ class PresenceManager(object):
         self.agent = agent
         self.client: slixmpp.ClientXMPP = agent.client
 
-        self._contacts: Dict[slixmpp.JID, dict] = {}
+        self._contacts = {}
 
         self.approve_all = False
 
@@ -42,8 +53,6 @@ class PresenceManager(object):
         self.client.add_event_handler('presence_available', self._on_available)
         self.client.add_event_handler('presence_unavailable', self._on_unavailable)
         self.client.add_event_handler('changed_status', self._on_changed)
-
-        self.roster = self.client.roster
 
         self.client.add_event_handler('presence_subscribe', self._on_subscribe)
         self.client.add_event_handler('presence_subscribed', self._on_subscribed)
@@ -102,6 +111,7 @@ class PresenceManager(object):
 
         Args:
           show (spade.PresenceShow, optional): the show state of the presence (Default value = PresenceShow.NONE)
+          status (string): The human-readable status
 
         """
         self.current_available = True
@@ -153,11 +163,11 @@ class PresenceManager(object):
           dict: the roster of contacts
 
         """
-        for jid, item in dict(self.client.client_roster).items():
+        for jid, item in self.client.client_roster._jids.items():
             try:
-                self._contacts[slixmpp.JID(jid)].update(item)
+                self._contacts[slixmpp.JID(jid).bare].update(item._state)
             except KeyError:
-                self._contacts[slixmpp.JID(jid)] = item
+                self._contacts[slixmpp.JID(jid).bare] = item
 
         return self._contacts
 

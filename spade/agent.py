@@ -233,7 +233,7 @@ class Agent(object):
           str: a URL for the gravatar
 
         """
-        digest = md5(jid.encode("utf-8")).hexdigest()
+        digest = md5(str(jid).encode("utf-8")).hexdigest()
         return "http://www.gravatar.com/avatar/{md5}?d=monsterid".format(md5=digest)
 
     def submit(self, coro: Coroutine) -> Task:
