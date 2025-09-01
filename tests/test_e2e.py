@@ -110,6 +110,7 @@ async def test_msg_via_container():
     await receiver.start()
     await sender.start()
     await spade.wait_until_finished(receiver)
+    await sender.stop()
 
     assert receiver.res == msg.body
 
