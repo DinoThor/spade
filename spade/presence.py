@@ -33,6 +33,7 @@ class PresenceType(Enum):
 
 
 class PresenceInfo:
+    __slots__ = ('type', 'show', 'status', 'priority')
     def __init__(
         self,
         presence_type: PresenceType,
@@ -69,6 +70,8 @@ class PresenceInfo:
 
 
 class Contact:
+    __slots__ = ('jid', 'name', 'subscription', 'ask', 'groups', 'resources', 'current_presence', 'last_presence')
+
     def __init__(self, jid: JID, name: str, subscription: str, ask: str, groups: list):
         self.jid = jid
         self.name = name
@@ -126,6 +129,8 @@ class Contact:
 
 
 class PresenceManager:
+    __slots__ = ('contacts', 'agent', 'current_presence', 'approve_all')
+
     def __init__(self, agent, approve_all: bool = False):
         self.contacts: Dict[str, Contact] = {}
         self.agent = agent

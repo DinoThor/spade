@@ -39,6 +39,8 @@ class NotValidTransition(Exception):
 
 class CyclicBehaviour(object, metaclass=ABCMeta):
     """This behaviour is executed cyclically until it is stopped."""
+    __slots__ = ('agent', 'template', '_force_kill', '_is_done', '_exit_code',
+                 'presence', 'web', 'is_running', 'queue')
 
     def __init__(self):
         self.agent = None
