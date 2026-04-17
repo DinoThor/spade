@@ -131,7 +131,9 @@
 
 <div class="viewcode-block" id="MessageBase"><a class="viewcode-back" href="../../spade.html#spade.message.MessageBase">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">MessageBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for message handling in SPADE.&quot;&quot;&quot;</span>
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;sent&#39;</span><span class="p">,</span> <span class="s1">&#39;_to&#39;</span><span class="p">,</span> <span class="s1">&#39;_sender&#39;</span><span class="p">,</span> <span class="s1">&#39;_body&#39;</span><span class="p">,</span> <span class="s1">&#39;_thread&#39;</span><span class="p">,</span> <span class="s1">&#39;_metadata&#39;</span><span class="p">)</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;sent&quot;</span><span class="p">,</span> <span class="s2">&quot;_to&quot;</span><span class="p">,</span> <span class="s2">&quot;_sender&quot;</span><span class="p">,</span> <span class="s2">&quot;_body&quot;</span><span class="p">,</span> <span class="s2">&quot;_thread&quot;</span><span class="p">,</span> <span class="s2">&quot;_metadata&quot;</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">to</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">JID</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

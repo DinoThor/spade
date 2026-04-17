@@ -171,7 +171,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">await</span> <span class="n">resp</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">IqError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">iq</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">][</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;conflict&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">iq</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span><span class="s2">&quot;condition&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;conflict&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Account already exists. Trying to login&quot;</span><span class="p">)</span>
             <span class="k">pass</span>
         <span class="k">except</span> <span class="n">IqTimeout</span><span class="p">:</span>
