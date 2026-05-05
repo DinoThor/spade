@@ -44,6 +44,10 @@ jobs:
       run: |
         uv sync --extra dev
 
+    - name: Install PyJabber server
+      run: |
+        uv tool install pyjabber
+
     - name: Save uv cache (if cache miss)
       if: steps.cache-restore-windows.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
@@ -54,6 +58,18 @@ jobs:
           .venv
         key: uv-windows-latest-py${{ matrix.python }}-${{ hashFiles('uv.lock', 'pyproject.toml', 'requirements.txt') }}
 
+    - name: Run PyJabber in background
+      run: |
+        pyjabber --database_in_memory > log.txt &
+          echo $! > server.pid
+
     - name: Test with pytest
       run: |
-        uv run pytest --ignore=tests/test_e2e.py -q
+        uv run pytest -q
+
+    - name: Kill server
+      if: always()
+      shell: bash
+      run: |
+        PID=$(cat server.pid)
+        kill $PID || true
