@@ -61,11 +61,12 @@ jobs:
     - name: Run PyJabber in background
       run: |
         pyjabber --database_in_memory > log.txt &
-          echo $! > server.pid
+        echo $! > server.pid
+          npx wait-port 5222
 
     - name: Test with pytest
       run: |
-        uv run pytest -q
+        uv run pytest
 
     - name: Kill server
       if: always()
