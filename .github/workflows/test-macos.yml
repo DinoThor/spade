@@ -33,7 +33,6 @@ jobs:
 
     - name: Install PyJabber server
       run: |
-#        uv tool install pyjabber
         uv tool install --with greenlet pyjabber
 
     - name: Run PyJabber in background
