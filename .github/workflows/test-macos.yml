@@ -37,7 +37,7 @@ jobs:
 
     - name: Run PyJabber in background
       run: |
-        pyjabber --database_in_memory > log.txt &
+        pyjabber -vvv --database_in_memory &
         echo $! > server.pid
         npx wait-port 5222
 
