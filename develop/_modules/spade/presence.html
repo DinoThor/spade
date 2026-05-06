@@ -152,6 +152,7 @@
 
 
 <div class="viewcode-block" id="PresenceInfo"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceInfo">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PresenceInfo</span><span class="p">:</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">presence_type</span><span class="p">:</span> <span class="n">PresenceType</span><span class="p">,</span>
@@ -188,6 +189,7 @@
 
 
 <div class="viewcode-block" id="Contact"><a class="viewcode-back" href="../../spade.html#spade.presence.Contact">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Contact</span><span class="p">:</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;jid&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;subscription&#39;</span><span class="p">,</span> <span class="s1">&#39;ask&#39;</span><span class="p">,</span> <span class="s1">&#39;groups&#39;</span><span class="p">,</span> <span class="s1">&#39;resources&#39;</span><span class="p">,</span> <span class="s1">&#39;current_presence&#39;</span><span class="p">,</span> <span class="s1">&#39;last_presence&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid</span><span class="p">:</span> <span class="n">JID</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subscription</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ask</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">jid</span> <span class="o">=</span> <span class="n">jid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -245,11 +247,22 @@
 
 
 <div class="viewcode-block" id="PresenceManager"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PresenceManager</span><span class="p">:</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;contacts&#39;</span><span class="p">,</span> <span class="s1">&#39;agent&#39;</span><span class="p">,</span> <span class="s1">&#39;current_presence&#39;</span><span class="p">,</span> <span class="s1">&#39;approve_all&#39;</span><span class="p">,</span> <span class="s1">&#39;on_subscribe&#39;</span><span class="p">,</span> <span class="s1">&#39;on_subscribed&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;on_unsubscribe&#39;</span><span class="p">,</span> <span class="s1">&#39;on_unsubscribed&#39;</span><span class="p">,</span> <span class="s1">&#39;on_presence_received&#39;</span><span class="p">,</span> <span class="s1">&#39;on_available&#39;</span><span class="p">,</span> <span class="s1">&#39;on_unavailable&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">approve_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">contacts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Contact</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">agent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_presence</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PresenceInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">approve_all</span> <span class="o">=</span> <span class="n">approve_all</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_subscribe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_subscribe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_subscribed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_subscribed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_unsubscribe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_unsubscribe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_unsubscribed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_unsubscribed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_presence_received</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_presence_received</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_available</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_unavailable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_on_unavailable</span>
+
         <span class="c1"># Adding event handlers to handle incoming presence and subscription events</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">add_event_handler</span><span class="p">(</span><span class="s2">&quot;presence_available&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_presence</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">add_event_handler</span><span class="p">(</span>
@@ -498,22 +511,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">send_presence</span><span class="p">(</span><span class="n">pto</span><span class="o">=</span><span class="n">jid</span><span class="p">,</span> <span class="n">ptype</span><span class="o">=</span><span class="s2">&quot;subscribed&quot;</span><span class="p">)</span></div>
 
     <span class="c1"># User-overridable methods</span>
-<div class="viewcode-block" id="PresenceManager.on_subscribe"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_subscribe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="PresenceManager.default_on_subscribe"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_subscribe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_subscribed"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_subscribed">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_subscribed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="PresenceManager.default_on_subscribed"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_subscribed">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_subscribed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_unsubscribe"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_unsubscribe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="PresenceManager.default_on_unsubscribe"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_unsubscribe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_unsubscribed"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_unsubscribed">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_unsubscribed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="PresenceManager.default_on_unsubscribed"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_unsubscribed">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_unsubscribed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_presence_received"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_presence_received">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_presence_received</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="n">Presence</span><span class="p">):</span>
+<div class="viewcode-block" id="PresenceManager.default_on_presence_received"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_presence_received">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_presence_received</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="n">Presence</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_available"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_available">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_available</span><span class="p">(</span>
+<div class="viewcode-block" id="PresenceManager.default_on_available"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_available">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_available</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">presence_info</span><span class="p">:</span> <span class="n">PresenceInfo</span><span class="p">,</span>
@@ -521,7 +534,7 @@
     <span class="p">):</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PresenceManager.on_unavailable"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.on_unavailable">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_unavailable</span><span class="p">(</span>
+<div class="viewcode-block" id="PresenceManager.default_on_unavailable"><a class="viewcode-back" href="../../spade.html#spade.presence.PresenceManager.default_on_unavailable">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">default_on_unavailable</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">peer_jid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">presence_info</span><span class="p">:</span> <span class="n">PresenceInfo</span><span class="p">,</span>

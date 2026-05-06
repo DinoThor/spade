@@ -168,7 +168,7 @@
 
 <div class="viewcode-block" id="CyclicBehaviour"><a class="viewcode-back" href="../../spade.html#spade.behaviour.CyclicBehaviour">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">CyclicBehaviour</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This behaviour is executed cyclically until it is stopped.&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;agent&#39;</span><span class="p">,</span> <span class="s1">&#39;template&#39;</span><span class="p">,</span> <span class="s1">&#39;_force_kill&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_done&#39;</span><span class="p">,</span> <span class="s1">&#39;_exit_code&#39;</span><span class="p">,</span> <span class="s1">&#39;presence&#39;</span><span class="p">,</span> <span class="s1">&#39;web&#39;</span><span class="p">,</span> <span class="s1">&#39;is_running&#39;</span><span class="p">,</span> <span class="s1">&#39;queue&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="kc">None</span>
@@ -619,7 +619,7 @@
 
 <div class="viewcode-block" id="OneShotBehaviour"><a class="viewcode-back" href="../../spade.html#spade.behaviour.OneShotBehaviour">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">OneShotBehaviour</span><span class="p">(</span><span class="n">CyclicBehaviour</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This behaviour is only executed once&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="s1">&#39;_already_executed&#39;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_already_executed</span> <span class="o">=</span> <span class="kc">False</span>
@@ -634,7 +634,7 @@
 
 <div class="viewcode-block" id="PeriodicBehaviour"><a class="viewcode-back" href="../../spade.html#spade.behaviour.PeriodicBehaviour">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PeriodicBehaviour</span><span class="p">(</span><span class="n">CyclicBehaviour</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This behaviour is executed periodically with an interval&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_period&#39;</span><span class="p">,</span> <span class="s1">&#39;_next_activation&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">start_at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a periodic behaviour.</span>
@@ -689,7 +689,7 @@
 
 <div class="viewcode-block" id="TimeoutBehaviour"><a class="viewcode-back" href="../../spade.html#spade.behaviour.TimeoutBehaviour">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TimeoutBehaviour</span><span class="p">(</span><span class="n">OneShotBehaviour</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This behaviour is executed once at after specified datetime&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_timeout&#39;</span><span class="p">,</span> <span class="s1">&#39;_timeout_triggered&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_at</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a timeout behaviour, which is run at start_at</span>
@@ -727,10 +727,11 @@
 
 <div class="viewcode-block" id="State"><a class="viewcode-back" href="../../spade.html#spade.behaviour.State">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">OneShotBehaviour</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A state of a FSMBehaviour is a OneShotBehaviour&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;next_state&#39;</span><span class="p">,</span> <span class="s1">&#39;receive&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">next_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">receive</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="State.set_next_state"><a class="viewcode-back" href="../../spade.html#spade.behaviour.State.set_next_state">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_next_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -747,7 +748,7 @@
 
 <div class="viewcode-block" id="FSMBehaviour"><a class="viewcode-back" href="../../spade.html#spade.behaviour.FSMBehaviour">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">FSMBehaviour</span><span class="p">(</span><span class="n">CyclicBehaviour</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A behaviour composed of states (oneshotbehaviours) that may transition from one state to another.&quot;&quot;&quot;</span>
-
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_states&#39;</span><span class="p">,</span> <span class="s1">&#39;_transitions&#39;</span><span class="p">,</span> <span class="s1">&#39;current_state&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">State</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
