@@ -506,17 +506,15 @@ otherwise it raises an exception.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="spade.behaviour.CyclicBehaviour.on_end">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/spade/behaviour.html#CyclicBehaviour.on_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.behaviour.CyclicBehaviour.on_end" title="Permalink to this definition"></a></dt>
-<dd><p>Coroutine called after the behaviour is done or killed.</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">on_end</span></span><a class="headerlink" href="#spade.behaviour.CyclicBehaviour.on_end" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="spade.behaviour.CyclicBehaviour.on_start">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/spade/behaviour.html#CyclicBehaviour.on_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.behaviour.CyclicBehaviour.on_start" title="Permalink to this definition"></a></dt>
-<dd><p>Coroutine called before the behaviour is started.</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">on_start</span></span><a class="headerlink" href="#spade.behaviour.CyclicBehaviour.on_start" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="spade.behaviour.CyclicBehaviour.presence">
@@ -713,9 +711,9 @@ dest (str): the destination state name</p>
 The run methods to be overloaded are in the State class.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="spade.behaviour.FSMBehaviour.setup">
-<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/spade/behaviour.html#FSMBehaviour.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.behaviour.FSMBehaviour.setup" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">setup</span></span><a class="headerlink" href="#spade.behaviour.FSMBehaviour.setup" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1613,41 +1611,6 @@ value (str): value of the metadata</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="spade.presence.PresenceManager.current_presence">
 <span class="sig-name descname"><span class="pre">current_presence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spade.presence.PresenceInfo" title="spade.presence.PresenceInfo"><span class="pre">PresenceInfo</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spade.presence.PresenceManager.current_presence" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_available">
-<span class="sig-name descname"><span class="pre">default_on_available</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">presence_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#spade.presence.PresenceInfo" title="spade.presence.PresenceInfo"><span class="pre">PresenceInfo</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_presence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spade.presence.PresenceInfo" title="spade.presence.PresenceInfo"><span class="pre">PresenceInfo</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_available" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_presence_received">
-<span class="sig-name descname"><span class="pre">default_on_presence_received</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">presence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Presence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_presence_received"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_presence_received" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_subscribe">
-<span class="sig-name descname"><span class="pre">default_on_subscribe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_subscribe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_subscribe" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_subscribed">
-<span class="sig-name descname"><span class="pre">default_on_subscribed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_subscribed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_subscribed" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_unavailable">
-<span class="sig-name descname"><span class="pre">default_on_unavailable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">presence_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#spade.presence.PresenceInfo" title="spade.presence.PresenceInfo"><span class="pre">PresenceInfo</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_presence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spade.presence.PresenceInfo" title="spade.presence.PresenceInfo"><span class="pre">PresenceInfo</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_unavailable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_unavailable" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_unsubscribe">
-<span class="sig-name descname"><span class="pre">default_on_unsubscribe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_unsubscribe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_unsubscribe" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spade.presence.PresenceManager.default_on_unsubscribed">
-<span class="sig-name descname"><span class="pre">default_on_unsubscribed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_jid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spade/presence.html#PresenceManager.default_on_unsubscribed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spade.presence.PresenceManager.default_on_unsubscribed" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
