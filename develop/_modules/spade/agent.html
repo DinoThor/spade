@@ -208,11 +208,21 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_alive</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span> <span class="ow">is</span> <span class="n">Agent</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_hook_plugin_after_connection</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span>
+            <span class="ow">is</span> <span class="n">Agent</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hook_plugin_after_connection</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_default_hook_plugin_after_connection</span>
+            <span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span> <span class="ow">is</span> <span class="n">Agent</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_hook_plugin_before_connection</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span>
+            <span class="ow">is</span> <span class="n">Agent</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hook_plugin_before_connection</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_default_hook_plugin_before_connection</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="Agent.set_loop"><a class="viewcode-back" href="../../spade.html#spade.agent.Agent.set_loop">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span></div>
